@@ -1,0 +1,52 @@
+[
+  {
+    "id": 1,
+    "zh_text": "我喜欢学习新的编程语言。",
+    "en_standard": "I enjoy learning new programming languages."
+  },
+  {
+    "id": 2,
+    "zh_text": "这本书非常有趣，我一口气读完了。",
+    "en_standard": "This book is very interesting; I read it in one sitting."
+  },
+  {
+    "id": 3,
+    "zh_text": "天气真好，我们去散步吧。",
+    "en_standard": "The weather is nice. Let's go for a walk."
+  },
+  {
+    "id": 4,
+    "zh_text": "他每天早上都喝一杯咖啡。",
+    "en_standard": "He drinks a cup of coffee every morning."
+  },
+  {
+    "id": 5,
+    "zh_text": "这个问题很难，我需要更多时间思考。",
+    "en_standard": "This question is difficult. I need more time to think."
+  },
+  {
+    "id": 6,
+    "zh_text": "我的朋友住在纽约。",
+    "en_standard": "My friend lives in New York."
+  },
+  {
+    "id": 7,
+    "zh_text": "她正在准备明天的演讲。",
+    "en_standard": "She is preparing for tomorrow's speech."
+  },
+  {
+    "id": 8,
+    "zh_text": "我们公司去年实现了业绩翻倍。",
+    "en_standard": "Our company doubled its revenue last year."
+  },
+  {
+    "id": 9,
+    "zh_text": "学习英语需要耐心和坚持。",
+    "en_standard": "Learning English requires patience and persistence."
+  },
+  {
+    "id": 10,
+    "zh_text": "周末你有什么计划？",
+    "en_standard": "What are your plans for the weekend?"
+  }
+]
