@@ -31,7 +31,8 @@ Thumbs.db
 
 # Testing
 coverage/
-test/
 
 # Misc
 *.local
+
+AGENTS.md
