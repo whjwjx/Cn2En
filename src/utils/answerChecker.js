@@ -37,7 +37,8 @@ export function checkAnswer(userText, standardText) {
         type: 'punctuation',
         error: userPunctChars[i] || '',
         suggestion: char,
-        reason: `标点符号错误: '${userPunctChars[i] || '缺少'}' 应为 '${char}'`,
+        reason: `标点符号建议: '${userPunctChars[i] || '缺少'}' → '${char}'（AI会智能判断是否合理）`,
+        isBlocking: false,
       });
     }
   });
@@ -49,7 +50,8 @@ export function checkAnswer(userText, standardText) {
           type: 'punctuation',
           error: char,
           suggestion: '',
-          reason: `多余的标点符号: '${char}'`,
+          reason: `标点符号建议: '${char}'（AI会智能判断是否合理）`,
+          isBlocking: false,
         });
       }
     }
@@ -70,7 +72,8 @@ export function checkAnswer(userText, standardText) {
             type: 'punctuation',
             error: userLastChar,
             suggestion: standardLastChar,
-            reason: `标点符号错误: '${userLastChar}' 应为 '${standardLastChar}'`,
+            reason: `句尾标点建议: '${userLastChar}' → '${standardLastChar}'（AI会智能判断）`,
+            isBlocking: false,
           });
         }
       } else {
@@ -78,7 +81,8 @@ export function checkAnswer(userText, standardText) {
           type: 'punctuation',
           error: '',
           suggestion: standardLastChar,
-          reason: `句尾缺少标点符号: '${standardLastChar}'`,
+          reason: `句尾标点建议: 可加 '${standardLastChar}'（AI会智能判断）`,
+          isBlocking: false,
         });
       }
     }
@@ -87,7 +91,8 @@ export function checkAnswer(userText, standardText) {
       type: 'punctuation',
       error: userLastChar,
       suggestion: '',
-      reason: `多余的标点符号: '${userLastChar}'`,
+      reason: `句尾标点建议: '${userLastChar}'（AI会智能判断是否合理）`,
+      isBlocking: false,
     });
   }
 

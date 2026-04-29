@@ -95,13 +95,12 @@ function PracticeMode({ currentItem, onNext, onPrev, onComplete, settings }) {
     setResult(checkResult);
     setShowResult(true);
     setShowHintOnText(false);
-    setShowCheckResult(true);
     setTotalCount(prev => prev + 1);
 
     if (checkResult.isCorrect) {
       setChineseAnalysis(null);
       setErrorExplanation(null);
-      setShowCheckResult(false);
+      setShowCheckResult(true);
       setStreak(prev => prev + 1);
       setCorrectCount(prev => prev + 1);
       if (isInWrong) {
@@ -125,18 +124,49 @@ function PracticeMode({ currentItem, onNext, onPrev, onComplete, settings }) {
         ]);
         setChineseAnalysis(analysis);
         setErrorExplanation(explanation);
+
+        const hasOnlyNonBlockingErrors = checkResult.errors.length === 0 ||
+          checkResult.errors.every(e => !e.isBlocking);
+        const hasNoBlockingErrorDetails = !explanation?.errorDetails ||
+          explanation.errorDetails.length === 0;
+        const hasStrongPositiveFeedback = explanation?.encouragement?.includes('棒') ||
+          explanation?.learningPoints?.some(p => p.includes('棒') || p.includes('正确') || p.includes('好'));
+        const isAiApproved = hasOnlyNonBlockingErrors && hasNoBlockingErrorDetails && hasStrongPositiveFeedback;
+
+        if (isAiApproved) {
+          setResult({ ...checkResult, isCorrect: true, isAiApproved: true });
+          setShowCheckResult(true);
+          setStreak(prev => prev + 1);
+          setCorrectCount(prev => prev + 1);
+          if (isInWrong) {
+            await removeFromWrongNotes(currentItem.id);
+            setIsInWrong(false);
+          }
+          if (onComplete) {
+            onComplete(true);
+          }
+        } else {
+          setShowCheckResult(true);
+          if (!isInWrong) {
+            await addToWrongNotes(currentItem.id);
+            setIsInWrong(true);
+          }
+          if (onComplete) {
+            onComplete(false);
+          }
+        }
       } catch (error) {
         console.error('生成错误解释失败:', error);
         setErrorExplanation(null);
+        if (!isInWrong) {
+          await addToWrongNotes(currentItem.id);
+          setIsInWrong(true);
+        }
+        if (onComplete) {
+          onComplete(false);
+        }
       } finally {
         setErrorExplanationLoading(false);
-      }
-      if (!isInWrong) {
-        await addToWrongNotes(currentItem.id);
-        setIsInWrong(true);
-      }
-      if (onComplete) {
-        onComplete(false);
       }
     }
   };
@@ -298,13 +328,20 @@ function PracticeMode({ currentItem, onNext, onPrev, onComplete, settings }) {
         />
 
         {!showResult || !showCheckResult ? (
-          <button
-            onClick={handleSubmit}
-            disabled={!userInput.trim()}
-            className="w-full py-4 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed text-lg"
-          >
-            回车提示 · Ctrl+回车检查
-          </button>
+          errorExplanationLoading ? (
+            <div className="w-full py-4 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-xl text-center font-medium text-lg flex items-center justify-center gap-2">
+              <span className="animate-spin">⏳</span>
+              AI 正在分析你的答案...
+            </div>
+          ) : (
+            <button
+              onClick={handleSubmit}
+              disabled={!userInput.trim()}
+              className="w-full py-4 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed text-lg"
+            >
+              回车提示 · Ctrl+回车检查
+            </button>
+          )
         ) : (
           <div
             className={`p-4 rounded-xl border-2 ${
@@ -315,14 +352,50 @@ function PracticeMode({ currentItem, onNext, onPrev, onComplete, settings }) {
           >
             <div className="flex items-center justify-between mb-3">
               <span
-                className={`text-lg font-medium ${result.isCorrect ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}
+                className={`text-lg font-medium ${
+                  result.isCorrect
+                    ? result.isAiApproved
+                      ? 'text-blue-600 dark:text-blue-400'
+                      : 'text-green-600 dark:text-green-400'
+                    : 'text-red-600 dark:text-red-400'
+                }`}
               >
-                {result.isCorrect ? '✓ 正确！' : '✗ 错误'}
+                {result.isCorrect
+                  ? result.isAiApproved
+                    ? '✓ 正确！获得知识点 ✨'
+                    : '✓ 正确！'
+                  : '✗ 错误'}
               </span>
               <span className="text-gray-500 dark:text-gray-400 text-sm">
                 {correctCount} / {totalCount}
               </span>
             </div>
+
+            {result.isCorrect && result.isAiApproved && (
+              <div className="space-y-3">
+                {result.errors && result.errors.filter(e => e.type === 'punctuation' && !e.isBlocking).length > 0 && (
+                  <div className="text-sm bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
+                    <div className="text-yellow-600 dark:text-yellow-400 font-medium mb-1">💡 标点建议：</div>
+                    {result.errors.filter(e => e.type === 'punctuation' && !e.isBlocking).map((err, idx) => (
+                      <div key={idx} className="text-gray-600 dark:text-gray-300">{err.reason}</div>
+                    ))}
+                  </div>
+                )}
+                {errorExplanation && errorExplanation.learningPoints && errorExplanation.learningPoints.length > 0 && (
+                  <div className="text-sm bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                    <div className="text-blue-600 dark:text-blue-400 font-medium mb-1">💡 记住这个知识点：</div>
+                    {errorExplanation.learningPoints.map((point, index) => (
+                      <div key={index} className="text-gray-600 dark:text-gray-300">{point}</div>
+                    ))}
+                  </div>
+                )}
+                {errorExplanation && errorExplanation.encouragement && (
+                  <div className="text-sm text-center text-yellow-600 dark:text-yellow-400 italic">
+                    {errorExplanation.encouragement}
+                  </div>
+                )}
+              </div>
+            )}
 
             {!result.isCorrect && (
               <div className="space-y-3">
